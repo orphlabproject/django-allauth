@@ -506,6 +506,7 @@ class SetPasswordForm(PasswordVerificationMixin, UserForm):
 
 
 class ResetPasswordForm(forms.Form):
+    email_template = "account/email/password_reset_key"
 
     email = forms.EmailField(
         label=_("E-mail"),
@@ -556,11 +557,13 @@ class ResetPasswordForm(forms.Form):
                 "request": request,
             }
 
+            email_context = kwargs.get("email_context")
+            if email_context:
+                context.update(email_context)
+
             if app_settings.AUTHENTICATION_METHOD != AuthenticationMethod.EMAIL:
                 context["username"] = user_username(user)
-            get_adapter(request).send_mail(
-                "account/email/password_reset_key", email, context
-            )
+            get_adapter(request).send_mail(self.email_template, email, context)
         return self.cleaned_data["email"]
 
 
